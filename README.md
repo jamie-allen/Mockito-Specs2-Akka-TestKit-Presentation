@@ -1,4 +1,6 @@
-A Showoff presentation - see [Shawn Chacon's page](https://github.com/schacon/showoff) based on [Brian Clapper's](https://github.com/scala-phase/scala-orms/tree/master/ScalaQuery) presentation template.
+A ShowOff presentation based on [Brian Clapper's](https://github.com/scala-phase/scala-orms/tree/master/ScalaQuery) presentation template.
+
+For more information about ShowOff, see [Shawn Chacon's page](https://github.com/schacon/showoff) 
 
 Commands:
 * "rake css" to generate CSS from SASS
