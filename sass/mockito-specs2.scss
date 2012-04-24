@@ -1,4 +1,3 @@
-$slide_background_image: url(chariot.png);
 $header_footer_background: #008;
 $font_family: Helvetica, Verdana, Arial, sans-serif;
 $code_color: #533;
@@ -114,15 +113,6 @@ a
     padding-top: 2em !important;
     text-align: left;
     font-size: $body_font_size;
-
-    /* Logo image, upper left. */
-    &::before
-    {
-        position: absolute;
-        left: 0px;
-        top: 0px;
-        content: $slide_background_image;
-    }
 
     hr
     {

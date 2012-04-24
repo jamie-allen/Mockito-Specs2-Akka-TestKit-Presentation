@@ -1,6 +1,6 @@
 !SLIDE title-page
 
-## Specs2, Mockito and Akka TestKit
+Specs2, Mockito and Akka TestKit
 
 <img src="typesafe-logo-081111.png" class="illustration" note="final slash needed"/>
 
@@ -54,7 +54,7 @@
 # Bad TestKit Test
 
     // This code APPEARS to block on response, but the ? is a FUTURE
-	"This actor test" should "this return a message" in {
+    "This actor test" should "this return a message" in {
       val testDuration = Duration(2, SECONDS)
       implicit val timeout = Timeout(testDuration)
 
@@ -69,15 +69,15 @@
 # Good TestKit Test
 
     // This code handles the FUTURE response asynchronously
-	"This actor test" should "this return a message" in {
+    "This actor test" should "this return a message" in {
       val testDuration = Duration(2, SECONDS)
       implicit val timeout = Timeout(testDuration)
 
       val myActorRef = system.actorOf(Props[MyActor])
 
-	  val events = Await.result(eventActorRef ? 
-	  				 EventsListQuery("jboner","akka"),
-             		   testDuration).asInstanceOf[List[MyReturnData]]
+      val events = Await.result(eventActorRef ? 
+                     EventsListQuery("jboner","akka"),
+                       testDuration).asInstanceOf[List[MyReturnData]]
 
       events should not be ('empty)
     }
