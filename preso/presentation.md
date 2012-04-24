@@ -48,9 +48,17 @@ Specs2, Mockito and Akka TestKit
 
 * A testing framework for Akka actors
 * Can handle blocking and asynchronous tests
-* Please do not write blocking actors.  You will make Viktor Klang angry.  You won't like Viktor Klang when he's angry.
+* Please do not write blocking actors.  
+	* You will make Viktor Klang angry.  
+	* You won't like Viktor Klang when he's angry.
 
-!SLIDE bullets incremental transition=blindY
+!SLIDE transition=blindY
+# Angry Viktor
+
+<img src="237035-hulk.jpg" class="illustration" note="final slash needed"/>
+
+!SLIDE transition=blindY
+.notes There is no way to capture the result of the future call
 # Bad TestKit Test
 
     // This code APPEARS to block on response, but the ? is a FUTURE
@@ -65,7 +73,7 @@ Specs2, Mockito and Akka TestKit
       expectMsgClass(testDuration, classOf[List[MyReturnData]])
     }
 
-!SLIDE bullets incremental transition=blindY
+!SLIDE transition=blindY
 # Good TestKit Test
 
     // This code handles the FUTURE response asynchronously
@@ -82,3 +90,10 @@ Specs2, Mockito and Akka TestKit
       events should not be ('empty)
     }
 
+!SLIDE transition=blindY
+# References
+
+* [Mockito](http://code.google.com/p/mockito/)
+* [Specs2 User Guide](http://etorreborre.github.com/specs2/guide/org.specs2.UserGuide.html#User+Guide)
+* [Testing Actor Systems (Scala)](http://doc.akka.io/docs/akka/2.0/scala/testing.html#integration-testing-with-testkit)
+* [Maciej Matyjas - Testing Blocking Messages with Akka's TestKit](http://maciejmatyjas.com/2012/02/23/testing-blocking-messages-with-akkas-testkit/)
