@@ -4,8 +4,7 @@ Akka TestKit, Specs2 and Mockito
 
 <img src="typesafe-logo-081111.png" class="illustration" note="final slash needed"/>
 
-!SLIDE bullets incremental transition=blindY
-.notes Deterministic with respect to order of events and no concurrency concerns.
+!SLIDE transition=blindY
 # Agenda
 
 * Akka TestKit
@@ -41,22 +40,35 @@ Akka TestKit, Specs2 and Mockito
 	* Non-deterministic
 
 !SLIDE bullets incremental transition=blindY
-.notes Actors just don't respond to messages, they can become/unbecome
+.notes Actors just don't respond to messages, they can become/unbecome.  NEVER define public methods on your actor.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone DOES get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors!
 # Why TestActorRef?
 
 * Uncertain behavior and responses of Actors
 * ActorRef shields actors, only interaction by messages/mailboxes
-* TestActorRef also exposes the underlying reference
-* TestActorRef also supports querying the actor's receive
+* TestActorRef also exposes the underlying reference, direct access to receive
 
 !SLIDE transition=blindY
-.notes Gives you more flexibility to interact with actors using testing tools and frameworks that are more geared to traditional classes.
+.notes Gives you more flexibility to interact with actors using testing tools and frameworks that are more geared to traditional classes.  But why would you do this?  The reason is to test expectations that an actor will throw the correct exception if something illegal occurs, from a unit test perspective.  From an integration perspective, you would want to force the error and then check that the actor is properly restarted based on your defined strategy.  Note that you now have a direct reference to that specific instance of the actor - if the actor is restarted, you do not have a reference to the new instance wrapped in that TestActorRef.  However, this is useful if you want to perform post-mortem checks on the actor.
 # How to Access the Underlying Actor
 
 	val actorRef = TestActorRef[MyActor]
 	val actor = actorRef.underlyingActor
 
 	actor.receive("hello") // <- NOT A MESSAGE, NOT IN MAILBOX!
+
+!SLIDE transition=blindY
+# An Example of a Direct Call to Test Exceptions
+
+	import akka.testkit.TestActorRef
+	 
+	val actorRef = TestActorRef(new Actor {
+	  def receive = {
+	    case boom ⇒ throw new IllegalArgumentException("boom")
+	  }
+	})
+
+	// NOTE: You don't need the ".underlying" call on the actorRef
+	intercept[IllegalArgumentException] { actorRef.receive("hello") }
 
 !SLIDE transition=blindY
 .notes This just sends a message to an actor and expects a message of a specific type back
@@ -76,6 +88,8 @@ Akka TestKit, Specs2 and Mockito
 !SLIDE transition=blindY
 .notes What is wrong with this test?  This example has no way to capture the result of the future call
 # Bad TestKit Test
+
+	// WHAT IS WRONG HERE?
 
     "A MyActor" should "receive a response to this message" in {
       val testDuration = Duration(2, SECONDS)
@@ -105,30 +119,46 @@ Akka TestKit, Specs2 and Mockito
     }
 
 !SLIDE bullets incremental transition=blindY
-.notes You had to manage your anonymous implementations to show that something occurred, or that it happened the correct number of times.
+.notes Created in the model of earlier frameworks, such as EasyMock and JMock
 # Mockito
 
-    trait MyInterface {
+* Technically, a "Test Spy Framework"
+* Verify behaviors 
+* Stub methods
+
+!SLIDE transition=blindY
+.notes You had to manage your anonymous implementations to show that something occurred, or that it happened the correct number of times. This doesn't look TOO bad below, but if you had interfaces/traits that are very large (a smell test in itself), or had to use external libraries with large interfaces/traits that you couldn't control, it got out of hand very quickly.
+# Why Use Mockito?
+
+	// Some interface orthogonal to the class we're testing
+    trait MyInterface {  
       def testCall
     }
 
-    val myImpl = new MyInterface() {
+    // Anonymous impl allowing us to verify results
+    val myImpl = new MyInterface() { 
       var _callCount = 0
       def callCount = _callCount
       override def testCall() = callCount += 1
     }
 
     myImpl.callCount // res0: Int = 0
+
+    // How to verify expected results
     myImpl.testCall
-    myImpl.callCount // res2: Int = 1
+    assert(myImpl.callCount == 1) // res2: Int = 1
 
-!SLIDE bullets incremental transition=blindY
-. notes Created in the model of earlier frameworks, such as EasyMock and JMock
-# What is Mockito?
+!SLIDE transition=blindY
+# The Same Logic with Mockito
 
-* Technically, a "Test Spy Framework"
-* Verify behaviors 
-* Stub methods
+	// Some interface orthogonal to the class we're testing
+    trait MyInterface {  
+      def testCall
+    }
+
+    import org.mockito.Mockito._
+	val myMockImpl = mock(classOf[MyInterface])
+
 
 !SLIDE bullets incremental transition=blindY
 # Benefits of Mockito
@@ -139,7 +169,7 @@ Akka TestKit, Specs2 and Mockito
 
 !SLIDE bullets incremental transition=blindY
 .notes Static methods would be those on Objects.  Important to avoid shared mocks to avoid thread safety issues if tests are executed in parallel
-# Things NOT To Do with Mockito
+# Things Not To Do with Mockito
 
 * Do not mock final classes
 * Do not mock final methods
