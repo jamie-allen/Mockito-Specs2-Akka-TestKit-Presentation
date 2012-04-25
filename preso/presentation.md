@@ -40,7 +40,7 @@ Specs2, Mockito and Akka TestKit
 .notes Depends on objenesis, which may not work on J9. The limitation of objenesis should only be a production concern?
 # Things to Note About Mockito
 
-* Might not be supported on J9
+* Might not be supported on all VMs
 * Only use it to mock dependencies via a service interface
 
 !SLIDE bullets incremental transition=blindY
