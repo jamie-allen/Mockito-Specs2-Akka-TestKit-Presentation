@@ -1,5 +1,5 @@
 {
-    "name"        : "Specs2 & Mockito",
+    "name"        : "Akka TestKit, Specs2 & Mockito",
     "description" : "A discussion of what they are and how they can be used together",
     "sections"    : [ {"section" : "preso" } ]
 }
