@@ -1,51 +1,17 @@
 !SLIDE title-page
 
-Specs2, Mockito and Akka TestKit
+Akka TestKit, Specs2 and Mockito
 
 <img src="typesafe-logo-081111.png" class="illustration" note="final slash needed"/>
 
 !SLIDE bullets incremental transition=blindY
-.notes You had to manage your anonymous implementations to show that something occurred, or that it happened the correct number of times
-# What is mocking?
+.notes Deterministic with respect to order of events and no concurrency concerns.
+# Agenda
 
-* Used to be anonymous implementations of interfaces
-* Mocking frameworks like EasyMock and JMock
-
-!SLIDE bullets incremental transition=blindY
-# What is Mockito?
-
-* Technically, a "Test Spy Framework"
-* Verify behaviors 
-* Stub methods
-
-!SLIDE bullets incremental transition=blindY
-# Benefits of Mockito
-
-* Replaces the need for anonymous implementations of interfaces/traits
-* Can stub classes and interfaces/traits with the same API
-* Separates logic of expectations with the verification of results
-
-!SLIDE bullets incremental transition=blindY
-.notes Static methods would be those on Objects.  Important to avoid shared mocks to avoid thread safety issues if tests are executed in parallel
-# Things NOT To Do with Mockito
-
-* Do not mock final classes
-* Do not mock final methods
-* Do not mock static methods
-* Do not mock equals() or hashCode()
-* Cannot mock private methods
-* Avoid "shared" mocks
-
-!SLIDE transition=blindY
-# Example of Shared Mock
-
-
-!SLIDE bullets incremental transition=blindY
-.notes Depends on objenesis, which may not work on J9. The limitation of objenesis should only be a production concern?
-# Things to Note About Mockito
-
-* Might not be supported on all VMs
-* Only use it to mock dependencies via a service interface
+* Akka TestKit
+* Specs2
+* Mockito
+* See how they come together
 
 !SLIDE bullets incremental transition=blindY
 .notes Creating blocking actors is harder in Akka 2.0 from a message-passing perspective, but actors can still encapsulate blocking, side-effecting behaviors (calling to a database, putting data in an external message queue, etc). Wrap those behaviors in future calls with timeouts!
@@ -137,6 +103,61 @@ Specs2, Mockito and Akka TestKit
 
       response should not be ('empty)
     }
+
+!SLIDE bullets incremental transition=blindY
+.notes You had to manage your anonymous implementations to show that something occurred, or that it happened the correct number of times.
+# Mockito
+
+    trait MyInterface {
+      def testCall
+    }
+
+    val myImpl = new MyInterface() {
+      var _callCount = 0
+      def callCount = _callCount
+      override def testCall() = callCount += 1
+    }
+
+    myImpl.callCount // res0: Int = 0
+    myImpl.testCall
+    myImpl.callCount // res2: Int = 1
+
+!SLIDE bullets incremental transition=blindY
+. notes Created in the model of earlier frameworks, such as EasyMock and JMock
+# What is Mockito?
+
+* Technically, a "Test Spy Framework"
+* Verify behaviors 
+* Stub methods
+
+!SLIDE bullets incremental transition=blindY
+# Benefits of Mockito
+
+* Replaces the need for anonymous implementations of interfaces/traits
+* Can stub classes and interfaces/traits with the same API
+* Separates logic of expectations with the verification of results
+
+!SLIDE bullets incremental transition=blindY
+.notes Static methods would be those on Objects.  Important to avoid shared mocks to avoid thread safety issues if tests are executed in parallel
+# Things NOT To Do with Mockito
+
+* Do not mock final classes
+* Do not mock final methods
+* Do not mock static methods
+* Do not mock equals() or hashCode()
+* Cannot mock private methods
+* Avoid "shared" mocks
+
+!SLIDE transition=blindY
+# Example of Shared Mock
+
+
+!SLIDE bullets incremental transition=blindY
+.notes Depends on objenesis, which may not work on J9. The limitation of objenesis should only be a production concern?
+# Things to Note About Mockito
+
+* Might not be supported on all VMs
+* Only use it to mock dependencies via a service interface
 
 !SLIDE transition=blindY
 # References
