@@ -36,6 +36,10 @@ Specs2, Mockito and Akka TestKit
 * Cannot mock private methods
 * Avoid "shared" mocks
 
+!SLIDE transition=blindY
+# Example of Shared Mock
+
+
 !SLIDE bullets incremental transition=blindY
 .notes Depends on objenesis, which may not work on J9. The limitation of objenesis should only be a production concern?
 # Things to Note About Mockito
@@ -44,50 +48,94 @@ Specs2, Mockito and Akka TestKit
 * Only use it to mock dependencies via a service interface
 
 !SLIDE bullets incremental transition=blindY
+.notes Creating blocking actors is harder in Akka 2.0 from a message-passing perspective, but actors can still encapsulate blocking, side-effecting behaviors (calling to a database, putting data in an external message queue, etc). Wrap those behaviors in future calls with timeouts!
 # Akka TestKit
 
 * A testing framework for Akka actors
 * Can handle blocking and asynchronous tests
-* Please do not write blocking actors.  
-	* You will make Viktor Klang angry.  
-	* You won't like Viktor Klang when he's angry.
+* Please do not write blocking actors
+	* You will make Viktor Klang angry
+	* You won't like Viktor Klang when he's angry
 
 !SLIDE transition=blindY
 # Angry Viktor
+<img src="viktor.png" class="illustration" note="final slash needed"/> => <img src="237035-hulk.jpg" class="illustration" note="final slash needed"/>
 
-<img src="237035-hulk.jpg" class="illustration" note="final slash needed"/>
+!SLIDE bullets incremental transition=blindY
+.notes Deterministic with respect to order of events and no concurrency concerns.
+# Actor Testing Models
+
+* Unit Test
+	* Isolated
+	* Single-threaded
+	* Deterministic
+* Integration Test
+	* Multiple and Encapsulated
+	* Multithreaded
+	* Non-deterministic
+
+!SLIDE bullets incremental transition=blindY
+.notes Actors just don't respond to messages, they can become/unbecome
+# Why TestActorRef?
+
+* Uncertain behavior and responses of Actors
+* ActorRef shields actors, only interaction by messages/mailboxes
+* TestActorRef also exposes the underlying reference
+* TestActorRef also supports querying the actor's receive
 
 !SLIDE transition=blindY
-.notes There is no way to capture the result of the future call
-# Bad TestKit Test
+.notes Gives you more flexibility to interact with actors using testing tools and frameworks that are more geared to traditional classes.
+# How to Access the Underlying Actor
 
-    // This code APPEARS to block on response, but the ? is a FUTURE
-    "This actor test" should "this return a message" in {
+	val actorRef = TestActorRef[MyActor]
+	val actor = actorRef.underlyingActor
+
+	actor.receive("hello") // <- NOT A MESSAGE, NOT IN MAILBOX!
+
+!SLIDE transition=blindY
+.notes This just sends a message to an actor and expects a message of a specific type back
+# Simple TestKit Test
+
+	"A MyActor" should "respond asynchronously to a message" in {
       val testDuration = Duration(2, SECONDS)
       implicit val timeout = Timeout(testDuration)
 
-      val myActorRef = system.actorOf(Props[MyActor])
+      val myActorRef = TestActorRef[MyActor]
+
+      myActorRef ! DataQuery("foo", "bar")
+
+      expectMsgClass(testDuration, classOf[MyResponse])
+    }
+
+!SLIDE transition=blindY
+.notes What is wrong with this test?  This example has no way to capture the result of the future call
+# Bad TestKit Test
+
+    "A MyActor" should "receive a response to this message" in {
+      val testDuration = Duration(2, SECONDS)
+      implicit val timeout = Timeout(testDuration)
+
+      val myActorRef = TestActorRef[MyActor]
 
       myActorRef ? MyMessageToGetSomeData
 
-      expectMsgClass(testDuration, classOf[List[MyReturnData]])
+      expectMsgClass(testDuration, classOf[MyResponse])
     }
 
 !SLIDE transition=blindY
 # Good TestKit Test
 
-    // This code handles the FUTURE response asynchronously
-    "This actor test" should "this return a message" in {
+    "A MyActor" should "receive a response to this message" in {
       val testDuration = Duration(2, SECONDS)
       implicit val timeout = Timeout(testDuration)
 
-      val myActorRef = system.actorOf(Props[MyActor])
+      val myActorRef = TestActorRef[MyActor]
 
-      val events = Await.result(eventActorRef ? 
-                     EventsListQuery("jboner","akka"),
-                       testDuration).asInstanceOf[List[MyReturnData]]
+      val response = Await.result(myActorRef ? 
+                       DataQuery("foo","bar"),
+                         testDuration).asInstanceOf[MyResponse]
 
-      events should not be ('empty)
+      response should not be ('empty)
     }
 
 !SLIDE transition=blindY
