@@ -65,7 +65,7 @@ Jamie Allen
   * compareTo
 
 !SLIDE bullets incremental transition=blindY
-.notes Actors just don't respond to messages, they can become/unbecome.  NEVER define public methods on your actor.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone does get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors!
+.notes Actors just don't respond to messages, they can become/unbecome.  NEVER try to call methods on your actor except via passing messages to the mailbox.  Don't mark them private, as that means a synthetic public method has to be created to call into the method from the receive closure.  All "private" methods should be final, for performance optimization reasons.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone does get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors!
 # Why TestActorRef?
 
 * Uncertain behavior and responses of Actors
