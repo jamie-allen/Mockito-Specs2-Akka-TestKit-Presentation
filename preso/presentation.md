@@ -213,7 +213,7 @@ Jamie Allen
     }
 
     import org.mockito.Mockito._
-    val myMockImpl = mock(classOf[MyInterface])
+    val myMockImpl = mock[MyInterface]
 
     when(myMockImpl).thenReturn("Here")
     assertTrue(myMockImpl.testCall == "Here")
