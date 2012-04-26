@@ -45,7 +45,14 @@ Jamie Allen
   * Non-deterministic
 
 !SLIDE bullets incremental transition=blindY
-.notes Stop/restart shut down the actor and its message queue, suspend/resume just pause it.  Watch/unwatch are for actor linkages, receiving a terminated message if an actor dies.  compareTo is done by address, allows you to see if an underlying actor ref is the same as one before it should have died.
+# Non-determinism in Testing
+
+* Verifyable results cannot be expected to occur in a specific order
+* Accept some level of probabilistic failure
+* Focus on a side effect you require, verify that it occurs eventually
+
+!SLIDE bullets incremental transition=blindY
+.notes Stop/restart shut down the actor and its message queue, suspend/resume just pause it.  Watch/unwatch are for actor linkages, receiving a terminated message if an actor dies.  compareTo is done by address, allows you to see if an underlying actor ref is the same as one before it should have died.  If isTerminated returns true, you know it will always be true, but if it returns false, it might be not still be alive (race condition)
 # TestActorRef
 
 * Allows you to manipulate actors
@@ -58,7 +65,7 @@ Jamie Allen
   * compareTo
 
 !SLIDE bullets incremental transition=blindY
-.notes Actors just don't respond to messages, they can become/unbecome.  NEVER define public methods on your actor.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone DOES get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors!
+.notes Actors just don't respond to messages, they can become/unbecome.  NEVER define public methods on your actor.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone does get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors!
 # Why TestActorRef?
 
 * Uncertain behavior and responses of Actors
@@ -75,7 +82,7 @@ Jamie Allen
 
     actorRef ! PoisonPill
 
-    assertFalse(actorRef.compareTo(actor))
+    assertFalse(actorRef.underlyingActor eq actor)
 
 !SLIDE transition=blindY
 # An Example of a Direct Call to Test Exceptions
@@ -136,12 +143,34 @@ Jamie Allen
     }
 
 !SLIDE bullets incremental transition=blindY
-.notes Created in the model of earlier frameworks, such as EasyMock and JMock
+# Specs2
+
+* Behavior-Driven Development testing framework
+* Create tests with intentions that are clear to devs and stakeholders
+* Based on natural language
+
+!SLIDE bullets incremental transition=blindY
+.notes The only public interface of an actor is its mailbox, but the API consists of messages it can handle
+# Unit Tests
+
+* Test names are sentences starting with the word "should"
+* Only test the APIs of a single entity
+
+!SLIDE bullets incremental transition=blindY
+# Integration/Acceptance Tests
+
+* Acceptance test names are written using an agile "User Story"
+* "As a [role]", I want [feature] so that [benefit]""
+* "Given [initial context], when [event occurs], then [ensure some outcome]"
+
+!SLIDE bullets incremental transition=blindY
+.notes Created in the model of earlier frameworks, such as EasyMock and JMock.  Test spy is a model that allows you to verify behavior and stub methods, but also allows you to embed assertions without external calls.
 # Mockito
 
 * Technically, a "Test Spy Framework"
 * Verify behaviors 
-* Stub methods
+* Stub methods or classes that haven't been implemented yet
+* Stub dependencies that are external to the test being executed
 
 !SLIDE transition=blindY
 .notes You had to manage your anonymous implementations to show that something occurred, or that it happened the correct number of times. This doesn't look TOO bad below, but if you had interfaces/traits that are very large (a smell test in itself), or had to use external libraries with large interfaces/traits that you couldn't control, it got out of hand very quickly.
@@ -217,5 +246,6 @@ Jamie Allen
 
 * [Testing Actor Systems (Scala)](http://doc.akka.io/docs/akka/2.0/scala/testing.html#integration-testing-with-testkit)
 * [Specs2 User Guide](http://etorreborre.github.com/specs2/guide/org.specs2.UserGuide.html#User+Guide)
+* [Wikipedia on BDD](http://en.wikipedia.org/wiki/Behavior_Driven_Development)
 * [Mockito](http://code.google.com/p/mockito/)
 * [Maciej Matyjas - Testing Blocking Messages with Akka's TestKit](http://maciejmatyjas.com/2012/02/23/testing-blocking-messages-with-akkas-testkit/)
