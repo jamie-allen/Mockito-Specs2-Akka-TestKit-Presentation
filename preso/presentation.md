@@ -97,7 +97,7 @@ Jamie Allen
     intercept[IllegalArgumentException] { actorRef.receive("hello") }
 
 !SLIDE transition=blindY
-.notes This just sends a message to an actor and expects a message of a specific type back
+.notes This just sends a message to an actor and expects a message of a specific type back.  Note that you need to mix in trait ImplicitSender to make this work, otherwise there is no "sender" for the actor to send the message back to.
 # Simple TestKit Test
 
     "A MyActor" should "respond asynchronously to a message" in {
@@ -126,22 +126,6 @@ Jamie Allen
       expectMsgClass(testDuration, classOf[MyResponse])
     }
 
-!SLIDE transition=blindY
-# Good TestKit Test
-
-    "A MyActor" should "receive a response to this message" in {
-      val testDuration = Duration(2, SECONDS)
-      implicit val timeout = Timeout(testDuration)
-
-      val myActorRef = TestActorRef[MyActor]
-
-      val response = Await.result(myActorRef ? 
-                       DataQuery("foo","bar"),
-                         testDuration).asInstanceOf[MyResponse]
-
-      response should not be ('empty)
-    }
-
 !SLIDE bullets incremental transition=blindY
 # Specs2
 
@@ -155,6 +139,7 @@ Jamie Allen
 
 * Test names are sentences starting with the word "should"
 * Only test the APIs of a single entity
+* I prefer externalizing actor logic to testable functions in utility objects
 
 !SLIDE bullets incremental transition=blindY
 # Integration/Acceptance Tests
@@ -162,6 +147,7 @@ Jamie Allen
 * Acceptance test names are written using an agile "User Story"
 * "As a [role]", I want [feature] so that [benefit]""
 * "Given [initial context], when [event occurs], then [ensure some outcome]"
+* I'm not a fan of the Acceptance Test Specs2 syntax
 
 !SLIDE bullets incremental transition=blindY
 .notes Created in the model of earlier frameworks, such as EasyMock and JMock.  Test spy is a model that allows you to verify behavior and stub methods, but also allows you to embed assertions without external calls.
@@ -233,6 +219,23 @@ Jamie Allen
 !SLIDE transition=blindY
 # Example of Shared Mock
 
+    "The actor system" should {
+      val externalService = mock[ExternalService].defaultReturn("Hello")
+
+      "do something" in {
+        val c = system.actorOf(Props(new C_Actor(a, b, externalService)))
+
+        c ! StartWorkers
+        there was atLeastOne(externalService).goDoSomething
+      }
+
+      "do something else" in {
+        val c = system.actorOf(Props(new C_Actor(a, b, externalService)))
+
+        c ! StartWorkers
+        there was atLeastOne(externalService).goDoSomething
+      }
+    }
 
 !SLIDE bullets incremental transition=blindY
 .notes Depends on objenesis, which may not work on J9. The limitation of objenesis should only be a production concern?
@@ -244,7 +247,7 @@ Jamie Allen
 !SLIDE transition=blindY
 # References
 
-* [Testing Actor Systems (Scala)](http://doc.akka.io/docs/akka/2.0/scala/testing.html#integration-testing-with-testkit)
+* [Testing Actor Systems (Scala)](http://doc.akka.io/docs/akka/2.0.1/scala/testing.html#integration-testing-with-testkit)
 * [Specs2 User Guide](http://etorreborre.github.com/specs2/guide/org.specs2.UserGuide.html#User+Guide)
 * [Wikipedia on BDD](http://en.wikipedia.org/wiki/Behavior_Driven_Development)
 * [Mockito](http://code.google.com/p/mockito/)
