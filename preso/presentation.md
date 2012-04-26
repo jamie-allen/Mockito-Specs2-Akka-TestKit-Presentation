@@ -15,7 +15,6 @@ Jamie Allen
 * See how they come together
 
 !SLIDE bullets incremental transition=blindY
-.notes Akka is written to prevent blocking behaviors as much as possible.  You can still write code inside of actors that blocks, or have logic that looks synchronous when sending messages to actors.
 # Akka TestKit
 
 * A testing framework for Akka actors
@@ -65,7 +64,7 @@ Jamie Allen
   * compareTo
 
 !SLIDE bullets incremental transition=blindY
-.notes Actors just don't respond to messages, they can become/unbecome.  NEVER try to call methods on your actor except via passing messages to the mailbox.  Don't mark them private, as that means a synthetic public method has to be created to call into the method from the receive closure.  All "private" methods should be final, for performance optimization reasons.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone does get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors!
+.notes Actors just don't respond to messages, they can become/unbecome.  NEVER try to call methods on your actor except via passing messages to the mailbox.  Don't mark them private, as that means a synthetic public method has to be created to call into the method from the receive closure.  All "private" methods should be final, for performance optimization reasons.  They would also be exposed by TestActorRef, and ActorRef should in general mask any ability to call those methods.  But the real problem is that if someone does get a reference to your actor, they can call into the actor with another thread, which introduces the very concurrency issues you're trying to avoid by using actors.
 # Why TestActorRef?
 
 * Uncertain behavior and responses of Actors
@@ -82,6 +81,7 @@ Jamie Allen
 
     actorRef ! PoisonPill
 
+    // Assumes supervisor with a restart strategy
     assertFalse(actorRef.underlyingActor eq actor)
 
 !SLIDE transition=blindY
@@ -206,7 +206,7 @@ Jamie Allen
     verify(myMockImpl, atLeastOnce).testCall
 
 !SLIDE bullets incremental transition=blindY
-.notes Static methods would be those on Objects.  Important to avoid shared mocks to avoid thread safety issues if tests are executed in parallel
+.notes Static methods would be those on Objects.  Important to avoid shared mocks to avoid thread safety issues if tests are executed in parallel.  Note that I told you earlier to mark methods other than receive in an actor "final" for optimization - that means you cannot mock those methods.
 # Things Not To Do with Mockito
 
 * Do not mock final classes
@@ -224,21 +224,19 @@ Jamie Allen
 
       "do something" in {
         val c = system.actorOf(Props(new C_Actor(a, b, externalService)))
-
         c ! StartWorkers
         there was atLeastOne(externalService).goDoSomething
       }
 
       "do something else" in {
         val c = system.actorOf(Props(new C_Actor(a, b, externalService)))
-
         c ! StartWorkers
         there was atLeastOne(externalService).goDoSomething
       }
     }
 
 !SLIDE bullets incremental transition=blindY
-.notes Depends on objenesis, which may not work on J9. The limitation of objenesis should only be a production concern?
+.notes Depends on objenesis, which may not work on every JVM.
 # Things to Note About Mockito
 
 * Might not be supported on all VMs
